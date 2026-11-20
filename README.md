@@ -1,6 +1,4 @@
 # python-budget-planner
-Simple student budget planner built with Python
-# python-budget-planner
 
 Simple CLI student budget planner built with Python, designed for tracking budgets and planned expenses in UGX.
 
