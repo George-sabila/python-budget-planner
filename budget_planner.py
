@@ -1,0 +1,278 @@
+expenses = []
+budget = None
+
+
+def get_amount(prompt):
+    while True:
+        try:
+            amount = float(input(prompt))
+
+            if amount <= 0:
+                print("Amount must be greater than zero.")
+            else:
+                return amount
+
+        except ValueError:
+            print("Invalid amount. Enter a valid number.")
+
+
+def get_budget():
+    global budget
+    budget = get_amount("Enter available budget (UGX): ")
+    print(f"Budget set to UGX {budget:,.2f}")
+    check_budget()
+
+
+def add_expense():
+    description = input("Enter description: ").strip()
+
+    while not description:
+        print("Description cannot be empty.")
+        description = input("Enter description: ").strip()
+
+    category = input("Enter category: ").strip()
+
+    while not category:
+        print("Category cannot be empty.")
+        category = input("Enter category: ").strip()
+
+    amount = get_amount("Enter estimated amount (UGX): ")
+
+    expenses.append({
+        "description": description,
+        "category": category,
+        "amount": amount
+    })
+
+    print("Expense added successfully.")
+    check_budget()
+
+
+def display_expenses():
+    if not expenses:
+        print("\nNo planned expenses recorded.")
+        return
+
+    print("\n--- Planned Expenses ---")
+    print(f"{'No.':<5}{'Description':<25}{'Category':<20}{'Amount (UGX)':>15}")
+    print("-" * 65)
+
+    for index, expense in enumerate(expenses, start=1):
+        print(
+            f"{index:<5}"
+            f"{expense['description']:<25}"
+            f"{expense['category']:<20}"
+            f"{expense['amount']:>15,.2f}"
+        )
+
+    print("-" * 65)
+
+
+def calculate_total():
+    return sum(expense["amount"] for expense in expenses)
+
+
+def display_budget_summary():
+    if budget is None:
+        print("Please set your budget first.")
+        return
+
+    total = calculate_total()
+    balance = budget - total
+
+    print("\n--- Budget Summary ---")
+    print(f"Available budget: UGX {budget:,.2f}")
+    print(f"Planned expenditure: UGX {total:,.2f}")
+
+    if balance > 0:
+        print(f"Remaining budget: UGX {balance:,.2f}")
+    elif balance < 0:
+        print(f"Budget deficit: UGX {abs(balance):,.2f}")
+    else:
+        print("Your budget is exactly balanced.")
+
+    check_budget()
+
+
+def check_budget():
+    if budget is not None:
+        total = calculate_total()
+
+        if total > budget:
+            print("\nWARNING: Your planned expenses exceed your budget!")
+            print(f"Amount exceeded: UGX {total - budget:,.2f}")
+
+
+def display_category_totals():
+    if not expenses:
+        print("No expenses available.")
+        return
+
+    categories = {}
+
+    for expense in expenses:
+        category = expense["category"]
+        categories[category] = categories.get(category, 0) + expense["amount"]
+
+    print("\n--- Expenditure by Category ---")
+
+    for category, total in categories.items():
+        print(f"{category}: UGX {total:,.2f}")
+
+    category = input("\nEnter category to check: ").strip()
+
+    total = sum(
+        expense["amount"]
+        for expense in expenses
+        if expense["category"].casefold() == category.casefold()
+    )
+
+    if total > 0:
+        print(f"Total for {category}: UGX {total:,.2f}")
+    else:
+        print(f"No expenses found in category '{category}'.")
+
+
+def display_largest_expenses():
+    if not expenses:
+        print("No expenses available.")
+        return
+
+    largest = sorted(
+        expenses,
+        key=lambda expense: expense["amount"],
+        reverse=True
+    )[:3]
+
+    print("\n--- Three Largest Expenses ---")
+
+    for index, expense in enumerate(largest, start=1):
+        print(
+            f"{index}. {expense['description']} "
+            f"({expense['category']}): "
+            f"UGX {expense['amount']:,.2f}"
+        )
+
+
+def select_expense():
+    if not expenses:
+        print("No expenses available.")
+        return None
+
+    display_expenses()
+
+    while True:
+        try:
+            number = int(input("Enter expense number: "))
+
+            if 1 <= number <= len(expenses):
+                return number - 1
+
+            print("Invalid expense number.")
+
+        except ValueError:
+            print("Enter a valid whole number.")
+
+
+def edit_expense():
+    index = select_expense()
+
+    if index is None:
+        return
+
+    expense = expenses[index]
+
+    description = input(
+        f"New description [{expense['description']}]: "
+    ).strip()
+
+    if description:
+        expense["description"] = description
+
+    category = input(
+        f"New category [{expense['category']}]: "
+    ).strip()
+
+    if category:
+        expense["category"] = category
+
+    while True:
+        amount = input(
+            f"New amount [{expense['amount']:,.2f}]: "
+        ).strip()
+
+        if not amount:
+            break
+
+        try:
+            amount = float(amount)
+
+            if amount <= 0:
+                print("Amount must be greater than zero.")
+                continue
+
+            expense["amount"] = amount
+            break
+
+        except ValueError:
+            print("Enter a valid amount.")
+
+    print("Expense updated successfully.")
+    check_budget()
+
+
+def remove_expense():
+    index = select_expense()
+
+    if index is None:
+        return
+
+    removed = expenses.pop(index)
+    print(f"Removed expense: {removed['description']}")
+    check_budget()
+
+
+def main():
+    print("===== STUDENT BUDGET PLANNER =====")
+
+    get_budget()
+
+    while True:
+        print("\n========== MAIN MENU ==========")
+        print("1. Set or update budget")
+        print("2. Add planned expense")
+        print("3. Display all expenses")
+        print("4. Display budget summary")
+        print("5. Calculate expenditure by category")
+        print("6. Identify three largest expenses")
+        print("7. Edit planned expense")
+        print("8. Remove planned expense")
+        print("9. Exit")
+
+        choice = input("Enter your choice (1-9): ").strip()
+
+        if choice == "1":
+            get_budget()
+        elif choice == "2":
+            add_expense()
+        elif choice == "3":
+            display_expenses()
+        elif choice == "4":
+            display_budget_summary()
+        elif choice == "5":
+            display_category_totals()
+        elif choice == "6":
+            display_largest_expenses()
+        elif choice == "7":
+            edit_expense()
+        elif choice == "8":
+            remove_expense()
+        elif choice == "9":
+            print("Thank you for using the Student Budget Planner.")
+            break
+        else:
+            print("Invalid choice. Select a number from 1 to 9.")
+
+
+if __name__ == "__main__":
+    main()
